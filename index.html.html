@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>aesthe</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#e11d2e">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="aesthe">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+:root{--red:#e11d2e;--red2:#b3121f;--ink:#000;--mute:#6b6b6b;--line:#eee;--soft:#fff4f4}
+*{box-sizing:border-box}
+html,body{height:100%;height:100dvh;margin:0;overscroll-behavior:none}
+*{-webkit-tap-highlight-color:transparent}button{touch-action:manipulation}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:#fff}
+#map{position:absolute;inset:0}
+.side{position:absolute;z-index:10;left:12px;top:12px;width:380px;max-width:calc(100% - 24px);max-height:calc(100% - 24px);display:flex;flex-direction:column;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.22);overflow:hidden}
+.head{padding:14px 14px 10px}
+.logo{font-size:26px;font-weight:800;letter-spacing:-1px;color:var(--red);margin-bottom:10px}
+.logo i{color:var(--ink);font-style:normal}
+.sb{display:flex;gap:8px;position:relative}
+.sb input{flex:1;padding:12px 14px;border:2px solid var(--line);border-radius:14px;font-size:16px;color:var(--ink);background:#fff;outline:none}
+.sb input:focus{border-color:var(--red)}
+.btn{border:0;background:var(--red);color:#fff;font-weight:700;padding:0 16px;border-radius:14px;cursor:pointer;font-size:14px}
+.btn:hover{background:var(--red2)}
+.btn.o{background:#fff;color:var(--red);border:2px solid var(--red);padding:9px 14px}
+.btn.o:hover{background:var(--soft)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--line);background:#fff;color:var(--ink);padding:6px 12px;border-radius:99px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff}
+@media(hover:hover){.chip:hover{background:var(--red);border-color:var(--red);color:#fff}}
+.tabs{display:flex;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tab{flex:1;padding:10px;text-align:center;font-weight:600;font-size:14px;cursor:pointer;color:var(--mute);border-bottom:3px solid transparent}
+.tab.on{color:var(--ink);border-bottom-color:var(--red)}
+.body{overflow-y:auto;padding:8px 10px 12px;min-height:80px}
+.item{display:flex;gap:10px;align-items:center;padding:10px;border-radius:14px;cursor:pointer}
+.item:hover{background:var(--soft)}
+.dot{width:34px;height:34px;flex:none;border-radius:50%;background:var(--soft);color:var(--red);display:grid;place-items:center;font-weight:800}
+.item .t{flex:1;min-width:0}
+.item b{display:block;font-size:15px}
+.item small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{padding:24px 12px;text-align:center;color:var(--mute);font-size:14px}
+.det{padding:6px}
+.det h2{margin:4px 0 2px;font-size:21px}
+.det p{margin:4px 0;color:var(--mute);font-size:13px;line-height:1.4}
+.row{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.info{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:6px}
+.back{background:none;border:0;color:var(--red);font-weight:700;cursor:pointer;padding:6px;font-size:14px}
+.sug{position:absolute;top:100%;left:0;right:0;margin-top:6px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2);z-index:20;overflow:hidden}
+.sug div{padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line)}
+.sug div:hover{background:var(--soft)}
+.sug small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fab{position:absolute;z-index:10;right:12px;bottom:calc(30px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
+.fab button{width:46px;height:46px;border-radius:50%;border:0;background:#fff;color:var(--red);font-size:20px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}
+.fab button.on{background:var(--red);color:#fff}
+@media(hover:hover){.fab button:hover{background:var(--red);color:#fff}}
+.pin{width:26px;height:26px;background:var(--red);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.4);cursor:pointer}
+.pin::after{content:"";position:absolute;width:8px;height:8px;background:#fff;border-radius:50%;top:7px;left:7px}
+.pin.s{background:var(--ink)}
+.me{width:16px;height:16px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 0 0 6px rgba(225,29,46,.25)}
+.maplibregl-ctrl-attrib{font-size:10px}
+.tools{display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px;scrollbar-width:none}
+.tools .chip{flex:none;font-size:12px;padding:5px 10px}
+#bi{padding:0 14px 8px;font-size:12px;color:var(--mute);line-height:1.4}
+.big{font-size:26px;font-weight:800;color:var(--red)}
+.side>*{flex-shrink:0}.side>.body{flex:1 1 auto;flex-shrink:1;min-height:90px}
+.grab{display:none;padding:8px 0 4px;cursor:pointer;touch-action:none}
+.grab i{display:block;width:44px;height:5px;border-radius:3px;background:var(--line);margin:0 auto}
+@media(max-width:700px){
+ .side{top:auto;left:8px;right:8px;width:auto;max-width:none;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-height:50dvh;overflow:visible}
+ .grab{display:block}
+ .head{padding:2px 12px 10px}
+ .logo{font-size:20px;margin-bottom:6px}
+ .chip,.tools .chip{padding:8px 13px;font-size:13px}
+ .side.peek>:not(.head):not(.grab):not(.chips){display:none}
+ .side.peek .logo{display:none}
+ .sug{top:auto;bottom:100%;margin:0 0 6px;max-height:40dvh;overflow-y:auto}
+ .fab{bottom:calc(var(--sh,150px) + 18px + env(safe-area-inset-bottom,0px))}
+ .fab button{width:44px;height:44px}
+ #zi,#zo{display:none}
+ .maplibregl-ctrl-top-right{top:64px}
+}
+#hud{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:12;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;max-width:calc(100% - 24px)}
+#hud>div{background:#000;color:#fff;border-radius:14px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3);text-align:center}
+#nb{font-size:17px!important;background:var(--red)!important}
+#net{background:#fff!important;color:var(--red)!important;border:2px solid var(--red)}
+.steps{margin:8px 0 0;padding-left:22px;font-size:13px;line-height:1.5}
+.steps small{color:var(--mute)}
+.me.hd::before{content:"";position:absolute;left:50%;top:-13px;margin-left:-6px;border:6px solid transparent;border-bottom:10px solid var(--red);border-top:0}
+
+/* Map colour modes (eye comfort): filters change only the map drawing, not pins or panels */
+body.m-grey .maplibregl-canvas{filter:grayscale(1) contrast(.95)}
+body.m-warm .maplibregl-canvas{filter:sepia(.45) saturate(.9) brightness(.94)}
+body.dk{--ink:#f2f2f2;--line:#333;--soft:#2a1518;--mute:#a8a8a8;background:#111}
+body.dk .side,body.dk .sug{background:#151515}
+body.dk .sb input,body.dk .chip,body.dk .btn.o,body.dk .fab button{background:#1f1f1f}
+body.dk .chip.on,body.dk .fab button.on{background:var(--red)}
+body.dk #hud>div{background:#2a2a2a}
+body.dk #net{background:#1f1f1f!important}
+body.dk .maplibregl-ctrl-group{background:#222}
+body.dk .maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(1)}
+body.dk .maplibregl-ctrl-scale{background:rgba(30,30,30,.8);color:#eee;border-color:#eee}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="hud"><div id="nb" hidden></div><div id="ts" hidden></div><div id="net" hidden></div></div>
+<div class="side">
+ <div class="grab" id="grab"><i></i></div>
+ <div class="head">
+  <div class="logo">aesthe<i>.</i></div>
+  <div class="sb"><input id="q" placeholder="Search places or addresses" autocomplete="off"><button class="btn" id="go">Go</button><div class="sug" id="sug" hidden></div></div>
+ </div>
+ <div class="chips" id="chips"></div>
+ <div class="tools"><button class="chip on" id="tNames">More names</button><button class="chip on" id="tLang">Names: English</button><button class="chip" id="tBord">Borders</button><button class="chip" id="tTheme">Map: Default</button><button class="chip on" id="tVoice">Voice</button><button class="chip" id="tOff">Save area offline</button></div>
+ <div id="bi" hidden></div>
+ <div class="tabs"><div class="tab on" data-t="explore">Explore</div><div class="tab" data-t="saved">Saved</div><div class="tab" data-t="measure">Measure</div></div>
+ <div class="body" id="body"></div>
+</div>
+<div class="fab"><button id="trk" title="Live tracking">⌖</button><button id="d3" title="Tilt for 3D buildings">3D</button><button id="loc" title="My location">◎</button><button id="zi">+</button><button id="zo">−</button></div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+// Retry failed/slow requests (tiles, search, routes) with back-off; skip retries when offline
+const _f=window.fetch.bind(window);
+window.fetch=async(u,o)=>{for(let i=0;;i++){try{const r=await _f(u,o);if((r.status<500&&r.status!==429)||i>=2||!navigator.onLine)return r}catch(e){if(i>=2||!navigator.onLine||e.name==='AbortError')throw e}await new Promise(r=>setTimeout(r,700*2**i))}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CATS=[
+ ['Cafés','["amenity"="cafe"]'],['Food','["amenity"~"restaurant|fast_food|food_court"]'],['Hotels','["tourism"~"hotel|guest_house|hostel|motel"]'],
+ ['Hospitals','["amenity"~"hospital|clinic|doctors"]'],['Shops','["shop"]'],['Fuel','["amenity"="fuel"]'],
+ ['Pharmacy','["amenity"="pharmacy"]'],['ATM','["amenity"~"atm|bank"]'],['Schools','["amenity"="school"]'],['Parks','["leisure"="park"]']
+];
+let saved=[];try{saved=JSON.parse(localStorage.getItem('aesthe')||'[]')}catch(e){}
+const store=()=>{try{localStorage.setItem('aesthe',JSON.stringify(saved))}catch(e){}};
+let tab='explore',items=[],place=null,me=null,routeInfo='',msg='Search a place, tap any name on the map, or pick a category to see what is nearby.';
+const key=p=>p.lat.toFixed(5)+','+p.lon.toFixed(5);
+const isSaved=p=>saved.some(s=>key(s)===key(p));
+
+let V=null;try{V=JSON.parse(localStorage.getItem('aesthe_view'))}catch(e){}
+const map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',...(V||{center:[78,20],zoom:3}),maxZoom:20,maxPitch:70,fadeDuration:0,refreshExpiredTiles:false});
+map.addControl(new maplibregl.NavigationControl({showZoom:false}),'top-right');
+map.addControl(new maplibregl.ScaleControl({unit:'metric'}),'top-right');
+let ttl='',A=null,B=null,mm=[],namesOn=true,lang='en',bordOn=false,nt,nav=null,navOn=false,mode='car',voiceOn=true;
+const tr={on:false,id:null,follow:true,k:null,last:null,dist:0,path:[],wl:null,centered:0};
+let markers=[],curMarker=null,meMarker=null;
+function mk(p,c,fn){
+ const el=document.createElement('div');el.style.cssText='width:26px;height:26px';
+ el.innerHTML='<div class="pin '+c+'"></div>';
+ if(fn)el.addEventListener('click',ev=>{ev.stopPropagation();fn()});
+ return new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([p.lon,p.lat]).addTo(map);
+}
+function rm(...ids){ids.forEach(i=>{if(map.getLayer(i))map.removeLayer(i)});ids.forEach(i=>{if(map.getSource(i))map.removeSource(i)})}
+function clearRoute(){rm('route')}
+function geo(id,g,paint){rm(id);map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:g}});map.addLayer({id,type:'line',source:id,layout:{'line-cap':'round','line-join':'round'},paint});if(styleReady&&ti===2)paintDark(true)}
+function poly(g){geo('poly',g,{'line-color':'#e11d2e','line-width':3});map.addLayer({id:'poly-f',type:'fill',source:'poly',paint:{'fill-color':'#e11d2e','fill-opacity':.08}},'poly')}
+const flat=a=>typeof a[0]==='number'?[a]:a.flatMap(flat);
+function fit(g,pad){const b=new maplibregl.LngLatBounds();flat(g.coordinates).forEach(c=>b.extend(c));map.fitBounds(b,{padding:pad||80,maxZoom:17})}
+const hav=(a,b)=>{const r=Math.PI/180,x=(b.lat-a.lat)*r,y=(b.lon-a.lon)*r,h=Math.sin(x/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(y/2)**2;return 12742000*Math.asin(Math.sqrt(h))};
+const fmt=m=>m<1000?Math.round(m)+' m':(m/1000).toFixed(2)+' km';
+function pick(p){if(tab==='measure'&&!place)setAB(!A?'A':!B?'B':'R',p);else select(p)}
+function setAB(w,p){
+ if(w==='A')A=p;else if(w==='B')B=p;else{A=p;B=null}
+ place=null;if(curMarker){curMarker.remove();curMarker=null}rm('poly-f','poly');
+ tab='measure';setTabs();markers.forEach(m=>m.remove());markers=[];drawM();render();
+}
+function clearM(){mm.forEach(m=>m.remove());mm=[];rm('mline');if(!navOn)rm('route')}
+async function drawM(){
+ clearM();
+ [A,B].forEach((p,i)=>{if(p)mm.push(mk(p,i?'s':''))});
+ if(!(A&&B)){if(A||B)map.flyTo({center:[(A||B).lon,(A||B).lat],zoom:Math.max(map.getZoom(),15)});return}
+ const a=A,b=B;let d='not available';
+ geo('mline',{type:'LineString',coordinates:[[a.lon,a.lat],[b.lon,b.lat]]},{'line-color':'#000','line-width':3,'line-dasharray':[2,2]});
+ fit({coordinates:[[a.lon,a.lat],[b.lon,b.lat]]},110);
+ try{
+  const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`).then(r=>r.json());
+  const rt=r.routes[0];
+  if(A!==a||B!==b||tab!=='measure')return;
+  geo('route',rt.geometry,{'line-color':'#e11d2e','line-width':5});
+  d=(rt.distance/1000).toFixed(2)+' km · about '+Math.round(rt.duration/60)+' min by car';
+ }catch(e){}
+ const el=$('drv');if(el)el.textContent='By road: '+d;
+}
+function measureView(b){
+ const row=(l,p)=>`<div class="item"><div class="dot">${l}</div><div class="t"><b>${p?esc(p.name):'Not set'}</b><small>${p?esc(p.addr||''):'Tap a place or spot on the map, or open a place and press Set as '+l}</small></div></div>`;
+ let h=row('A',A)+row('B',B);
+ if(A&&B)h+=`<div class="info"><div class="big">${fmt(hav(A,B))}</div>in a straight line<br><span id="drv">Checking road distance…</span></div>`;
+ h+=`<div class="row">${A&&B?'<button class="btn o" id="sw">Swap</button>':''}<button class="btn o" id="cl">Clear</button></div>`;
+ b.innerHTML=h;
+ if($('sw'))$('sw').onclick=()=>{[A,B]=[B,A];drawM();render()};
+ $('cl').onclick=()=>{A=B=null;clearM();render()};
+}
+async function rev(ll){
+ const p={name:'Dropped point',addr:'',lat:ll.lat,lon:ll.lng};
+ try{const x=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&lat=${ll.lat}&lon=${ll.lng}`).then(r=>r.json());if(x&&x.display_name){p.name=x.name||x.display_name.split(',')[0];p.addr=x.display_name}}catch(e){}
+ pick(p);
+}
+function show(list,fit){
+ markers.forEach(m=>m.remove());
+ markers=list.map(p=>mk(p,isSaved(p)?'s':'',()=>pick(p)));
+ if(fit&&list.length){const b=new maplibregl.LngLatBounds();list.forEach(p=>b.extend([p.lon,p.lat]));map.fitBounds(b,{padding:PAD(),maxZoom:16})}
+}
+function locate(center){
+ return new Promise((res,rej)=>{
+  if(!navigator.geolocation)return rej();
+  navigator.geolocation.getCurrentPosition(pos=>{
+   me={lat:pos.coords.latitude,lng:pos.coords.longitude};
+   if(meMarker)meMarker.setLngLat([me.lng,me.lat]);
+   else{const el=document.createElement('div');el.className='me';meMarker=new maplibregl.Marker({element:el}).setLngLat([me.lng,me.lat]).addTo(map)}
+   if(center)map.flyTo({center:[me.lng,me.lat],zoom:15});
+   res(me);
+  },er=>{msg=!window.isSecureContext?'Location only works when aesthe is opened from an https:// address (host the files), not from a downloaded file.':er&&er.code===1?'Location is blocked. Allow location for this site in your browser settings, then tap ◎.':'Could not get your position yet. Try outdoors with high-accuracy location turned on.';render();rej()},{enableHighAccuracy:true,timeout:10000});
+ });
+}
+function select(p){sheet(true);
+ place=p;routeInfo='';clearRoute();rm('poly-f','poly');
+ if(curMarker)curMarker.remove();
+ curMarker=mk(p,'');
+ if(p.geo){poly(p.geo);fit(p.geo,90)}else map.flyTo({center:[p.lon,p.lat],zoom:Math.max(map.getZoom(),16)});
+ render();
+}
+function render(){
+ const b=$('body');
+ if(place){
+  const p=place;
+  b.innerHTML=`<div class="det"><button class="back" id="bk">← Back</button><h2>${esc(p.name)}</h2>${p.addr?`<p>${esc(p.addr)}</p>`:''}${p.extra?`<p>${esc(p.extra)}</p>`:''}
+  <div class="row" id="md">${[['car','Drive'],['foot','Walk'],['bike','Cycle']].map(([k,l])=>`<button class="chip ${mode===k?'on':''}" data-m="${k}">${l}</button>`).join('')}</div><div class="row"><button class="btn" id="sv" style="padding:10px 16px">${isSaved(p)?'★ Saved':'☆ Save'}</button><button class="btn o" id="dr">Directions</button><button class="btn o" id="sa">Set as A</button><button class="btn o" id="sb2">Set as B</button><button class="btn o" id="cp">Copy link</button></div>
+  ${routeInfo?`<div class="info">${routeInfo}</div>`:''}${nav&&nav.p===p&&routeInfo.startsWith('<b>')?stepsHtml():''}</div>`;
+  $('bk').onclick=()=>{place=null;if(curMarker){curMarker.remove();curMarker=null}if(!navOn)clearRoute();rm('poly-f','poly');render()};
+  $('sv').onclick=()=>{if(isSaved(p))saved=saved.filter(s=>key(s)!==key(p));else saved.push({...p,geo:null});store();render()};
+  $('dr').onclick=()=>route(p);
+  $('sa').onclick=()=>setAB('A',p);
+  document.querySelectorAll('#md .chip').forEach(c=>c.onclick=()=>{mode=c.dataset.m;if(nav&&nav.p===p)route(p);else render()});
+  if($('st'))$('st').onclick=()=>navOn?stopNav():startNav();
+  $('sb2').onclick=()=>setAB('B',p);
+  $('cp').onclick=()=>{const u='https://www.openstreetmap.org/?mlat='+p.lat+'&mlon='+p.lon+'#map=18/'+p.lat+'/'+p.lon;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>{$('cp').textContent='Copied ✓'}).catch(()=>prompt('Copy this link',u))};
+  return;
+ }
+ if(tab==='measure')return measureView(b);
+ const list=tab==='saved'?saved:items;
+ if(!list.length){b.innerHTML=`<div class="empty">${tab==='saved'?'No saved places yet. Open any place and tap Save.':esc(msg)}</div>`;return}
+ b.innerHTML=(tab==='explore'&&ttl?'<div class="empty" style="padding:6px 10px 2px;text-align:left;font-weight:700;color:var(--ink)">'+esc(ttl)+'</div>':'')+list.map((p,i)=>`<div class="item" data-i="${i}"><div class="dot">${esc((p.name||'?')[0].toUpperCase())}</div><div class="t"><b>${esc(p.name)}</b><small>${esc(p.addr||p.extra||'')}</small></div>${isSaved(p)?'<span style="color:var(--red)">★</span>':''}</div>`).join('');
+ b.querySelectorAll('.item').forEach(el=>el.onclick=()=>select(list[+el.dataset.i]));
+}
+async function route(p,quiet){
+ if(!quiet){routeInfo='Finding route…';render()}
+ try{
+  if(!me)await locate(false);
+  const base={car:'routed-car',foot:'routed-foot',bike:'routed-bike'}[mode];
+  const r=await fetch(`https://routing.openstreetmap.de/${base}/route/v1/driving/${me.lng},${me.lat};${p.lon},${p.lat}?overview=full&geometries=geojson&steps=true`).then(r=>r.json());
+  const rt=r.routes&&r.routes[0];if(!rt)throw 0;
+  geo('route',rt.geometry,{'line-color':'#e11d2e','line-width':6});
+  if(!quiet)fit(rt.geometry);
+  nav={p,steps:rt.legs[0].steps,coords:rt.geometry.coordinates,i:0,said:-1,rt:Date.now()};
+  routeInfo=`<b>${fmt(rt.distance)}</b> · about <b>${Math.max(1,Math.round(rt.duration/60))} min</b> ${{car:'by car',foot:'on foot',bike:'by bike'}[mode]}`;
+ }catch(e){routeInfo=navigator.onLine?'Could not get a route. Check location access and try again.':'You are offline. New routes need internet; a route you already have keeps working.'}
+ render();
+}
+async function search(){
+ const v=$('q').value.trim();if(!v)return;
+ $('sug').hidden=true;msg='Searching…';ttl='';items=[];place=null;tab='explore';setTabs();render();
+ try{
+  const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&polygon_geojson=1&polygon_threshold=0.0005&q='+encodeURIComponent(v)).then(r=>r.json());
+  items=r.map(x=>({name:x.name||x.display_name.split(',')[0],addr:x.display_name,lat:+x.lat,lon:+x.lon,geo:/Polygon/.test(x.geojson&&x.geojson.type)?x.geojson:null}));
+  msg='No results found. Try another name.';
+  show(items,true);render();
+ }catch(e){msg='Search failed. Check your internet connection.';render()}
+}
+let t;
+$('q').addEventListener('input',()=>{
+ clearTimeout(t);const v=$('q').value.trim();
+ if(v.length<3){$('sug').hidden=true;return}
+ t=setTimeout(async()=>{
+  try{
+   const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&polygon_geojson=1&polygon_threshold=0.0005&q='+encodeURIComponent(v)).then(r=>r.json());
+   const s=$('sug');
+   s.innerHTML=r.map((x,i)=>`<div data-i="${i}">${esc(x.name||x.display_name.split(',')[0])}<small>${esc(x.display_name)}</small></div>`).join('');
+   s.hidden=!r.length;
+   s.querySelectorAll('div').forEach(d=>d.onclick=()=>{const x=r[+d.dataset.i],n=x.name||x.display_name.split(',')[0];s.hidden=true;$('q').value=n;pick({name:n,addr:x.display_name,lat:+x.lat,lon:+x.lon,geo:/Polygon/.test(x.geojson&&x.geojson.type)?x.geojson:null})});
+  }catch(e){}
+ },500);
+});
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')search()});
+$('go').onclick=search;
+document.addEventListener('click',e=>{if(!e.target.closest('.sb'))$('sug').hidden=true});
+
+const PAD=()=>innerWidth>700?{left:410,top:70,right:70,bottom:70}:{top:70,left:40,right:40,bottom:document.querySelector('.side').offsetHeight+30};
+const OPS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
+// Race all servers at once and take the first good answer (much faster than trying one by one)
+function ovq(q){
+ const cs=[];
+ return Promise.any(OPS.map(u=>{
+  const c=new AbortController();cs.push(c);setTimeout(()=>c.abort(),10000);
+  return _f(u,{method:'POST',body:'data='+encodeURIComponent(q),signal:c.signal}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{if(!j.elements)throw 0;cs.forEach(x=>x.abort());return j});
+ }));
+}
+const RX=[/cafe|coffee/,/restaurant|fast_food|food_court|bakery|ice_cream/,/lodging|hotel|hostel|motel|guest_house/,/hospital|clinic|doctor/,/shop|supermarket|convenience|mall|department|grocery|clothes/,/fuel|gas_station/,/pharmacy|chemist/,/\batm\b|bank/,/school|college|university|kindergarten/,/\bpark\b|garden|playground/];
+// Instant results straight from the map data already on screen (no extra internet needed)
+function localPOI(i,o){
+ const L=map.getStyle().layers.find(l=>l['source-layer']==='poi');if(!L)return[];
+ let fs;try{fs=map.querySourceFeatures(L.source,{sourceLayer:'poi'})}catch(e){return[]}
+ const seen=new Set(),out=[];
+ fs.forEach(f=>{
+  const g=f.properties||{},n=(lang==='en'&&g['name:en'])||g.name;
+  if(!n||f.geometry.type!=='Point')return;
+  const k=RX.findIndex(r=>r.test((g.class||'')+' '+(g.subclass||'')));
+  if(k<0||(i!=null&&k!==i))return;
+  const [lon,lat]=f.geometry.coordinates,id=n+lat.toFixed(4)+lon.toFixed(4);
+  if(seen.has(id))return;seen.add(id);
+  out.push({name:n,lat,lon,cat:k,addr:'',extra:CATS[k][0].replace(/s$/,'')});
+ });
+ return out.sort((a,b)=>hav(o,a)-hav(o,b));
+}
+const conv=(els,c,k)=>els.map(e=>{const g=e.tags||{};return{name:(lang==='en'&&g['name:en'])||g.name||g.brand||g.operator||c[0].replace(/s$/,''),cat:k,lat:e.lat??(e.center&&e.center.lat),lon:e.lon??(e.center&&e.center.lon),
+ addr:[g['addr:housenumber'],g['addr:street'],g['addr:city']].filter(Boolean).join(' '),
+ extra:[g.opening_hours&&'Hours: '+g.opening_hours,g.phone&&'Phone: '+g.phone,g.website].filter(Boolean).join(' · ')}}).filter(p=>p.lat!=null);
+function merge(a,b,o){
+ const out=[...a];
+ b.forEach(p=>{const j=out.findIndex(q=>q.name===p.name&&hav(q,p)<80);if(j<0)out.push(p);else if(p.extra&&p.extra.length>(out[j].extra||'').length)out[j]=p});
+ return out.sort((x,y)=>hav(o,x)-hav(o,y)).slice(0,50);
+}
+// Explore tab: a few useful places near you, as soon as the map has loaded
+function suggest(){
+ const ct=map.getCenter(),o=me?{lat:me.lat,lon:me.lng}:{lat:ct.lat,lon:ct.lng};
+ const cnt={},out=[];
+ localPOI(null,o).forEach(p=>{cnt[p.cat]=(cnt[p.cat]||0)+1;if(cnt[p.cat]<=3&&out.length<12)out.push(p)});
+ if(!out.length)return false;
+ items=out;ttl='Near you';place=null;show(items,false);render();return true;
+}
+let sugDone=false,nTok=0;
+map.on('idle',()=>{if(!sugDone&&map.getZoom()>=14&&!items.length&&tab==='explore'&&!place&&suggest())sugDone=true});
+async function nearby(i){
+ const c=CATS[i],ct=map.getCenter(),o={lat:ct.lat,lon:ct.lng},R=map.getZoom()>=15?1200:map.getZoom()>=14?1800:3000,tok=++nTok;
+ tab='explore';place=null;setTabs();ttl=c[0]+' near here';
+ const ck='aesthe_c'+i+'_'+ct.lat.toFixed(2)+'_'+ct.lng.toFixed(2);
+ let cached=[];try{cached=conv(JSON.parse(localStorage.getItem(ck))||[],c,i)}catch(e){}
+ items=merge(localPOI(i,o),cached,o);
+ msg='Looking for '+c[0].toLowerCase()+'…';
+ if(map.getZoom()<14)map.easeTo({center:ct,zoom:15,duration:500});
+ show(items,items.length&&map.getZoom()>=14);render();
+ try{
+  const els=(await ovq(`[out:json][timeout:10];nwr${c[1]}(around:${R},${ct.lat},${ct.lng});out center 60;`)).elements;
+  try{localStorage.setItem(ck,JSON.stringify(els))}catch(e){}
+  if(tok!==nTok)return;
+  items=merge(localPOI(i,o),conv(els,c,i),o);
+ }catch(e){
+  if(tok!==nTok)return;
+  if(!items.length){msg=navigator.onLine?'Could not reach the places servers. Tap the category to try again.':'You are offline. Categories need internet the first time you look at an area.';render();return}
+ }
+ msg='No '+c[0].toLowerCase()+' found within '+(R/1000)+' km of the map centre. Move the map and try again.';
+ show(items,true);render();
+}
+$('chips').innerHTML=CATS.map((c,i)=>`<button class="chip" data-i="${i}">${c[0]}</button>`).join('');
+$('chips').querySelectorAll('.chip').forEach(el=>el.onclick=()=>{$('chips').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));el.classList.add('on');nearby(+el.dataset.i)});
+
+function setTabs(){sheet(true);if(tab!=='measure')clearM();document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===tab))}
+document.querySelectorAll('.tab').forEach(el=>el.onclick=()=>{
+ tab=el.dataset.t;place=null;if(curMarker){curMarker.remove();curMarker=null}rm('poly-f','poly');setTabs();
+ if(tab==='saved')show(saved,true);else if(tab==='measure'){show([],false);drawM()}else{if(!items.length)suggest();show(items,false)}
+ render();
+});
+
+// Tap any named place on the map (cafes, hotels, hospitals, shops...) to open it, like Google Maps
+const poiAt=pt=>map.queryRenderedFeatures(pt).find(f=>(f.sourceLayer==='poi'||f.layer.id==='names'||f.layer.id==='names-dot')&&f.properties&&f.properties.name&&f.geometry.type==='Point');
+map.on('click',e=>{
+ $('sug').hidden=true;
+ const f=poiAt(e.point);
+ if(f){const [lon,lat]=f.geometry.coordinates;
+  pick({name:f.properties.name,addr:'',extra:String(f.properties.subclass||f.properties.class||f.properties.kind||'').replace(/_/g,' '),lat,lon})}else rev(e.lngLat)
+});
+map.on('mousemove',e=>{map.getCanvas().style.cursor=poiAt(e.point)?'pointer':''});
+
+// Labels: prefer English/Latin names, show every named place, and add extra names from OpenStreetMap
+const OP='https://overpass-api.de/api/interpreter',EMPTY={type:'FeatureCollection',features:[]};
+function applyStyle(){
+ map.getStyle().layers.forEach(l=>{
+  const s=l['source-layer']||'';
+  if(l.type==='symbol'&&/poi|place|_name|aerodrome|mountain|park/.test(s)&&l.layout&&l.layout['text-field'])
+   map.setLayoutProperty(l.id,'text-field',lang==='en'?['coalesce',['get','name:en'],['get','name:latin'],['get','name']]:['coalesce',['get','name'],['get','name:latin']]);
+  if(s==='poi'&&l.type==='symbol'){map.setFilter(l.id,['has','name']);map.setLayerZoomRange(l.id,14,24);map.setLayoutProperty(l.id,'text-padding',1)}
+  if(s==='water'&&l.type==='fill')map.setPaintProperty(l.id,'fill-color','#a5d8f5');
+  if(s==='waterway'&&l.type==='line')map.setPaintProperty(l.id,'line-color','#8ccbef');
+ });
+ if(styleReady&&ti===2)paintDark(true);
+}
+function loadNames(){
+ clearTimeout(nt);
+ if(!namesOn||map.getZoom()<16)return;
+ nt=setTimeout(async()=>{
+  const b=map.getBounds(),bb=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].join(',');
+  const q='[out:json][timeout:25];('+['amenity','shop','tourism','healthcare','leisure','office'].map(k=>`nwr["name"]["${k}"](${bb});`).join('')+');out center 250;';
+  try{
+   const r=await fetch(OP,{method:'POST',body:'data='+encodeURIComponent(q)}).then(r=>r.json());
+   const fs=r.elements.map(e=>{const g=e.tags||{},lat=e.lat??(e.center&&e.center.lat),lon=e.lon??(e.center&&e.center.lon);
+    return lat==null?null:{type:'Feature',properties:{name:(lang==='en'&&g['name:en'])||g.name,kind:g.amenity||g.shop||g.tourism||g.healthcare||g.leisure||g.office},geometry:{type:'Point',coordinates:[lon,lat]}}}).filter(Boolean);
+   map.getSource('names').setData({type:'FeatureCollection',features:fs});
+  }catch(e){}
+ },800);
+}
+map.on('load',()=>{
+ applyStyle();
+ map.addSource('names',{type:'geojson',data:EMPTY});
+ map.addLayer({id:'names-dot',type:'circle',source:'names',minzoom:16,paint:{'circle-radius':3.5,'circle-color':'#e11d2e','circle-stroke-color':'#fff','circle-stroke-width':1.5}});
+ map.addLayer({id:'names',type:'symbol',source:'names',minzoom:16,layout:{'text-field':['get','name'],'text-font':['Noto Sans Regular'],'text-size':12,'text-offset':[0,.7],'text-anchor':'top'},paint:{'text-color':'#b3121f','text-halo-color':'#fff','text-halo-width':1.6}});
+ loadNames();
+});
+map.on('moveend',loadNames);
+// Administrative borders (district / town / village) around the map centre
+async function bord(){
+ rm('bord-t','bord-l','bord');const bi=$('bi');
+ if(!bordOn){bi.hidden=true;return}
+ bi.hidden=false;bi.textContent='Finding borders…';
+ const c=map.getCenter();
+ const q=`[out:json][timeout:40];is_in(${c.lat},${c.lng})->.a;rel(pivot.a)["boundary"="administrative"]["admin_level"~"^([5-9]|10)$"];out geom tags;`;
+ try{
+  const r=await fetch(OP,{method:'POST',body:'data='+encodeURIComponent(q)}).then(r=>r.json());
+  if(!bordOn)return;
+  const fs=[],ns=[];
+  r.elements.forEach(e=>{const g=e.tags||{};ns.push({n:g.name||'(unnamed)',l:+g.admin_level});
+   (e.members||[]).forEach(m=>{if(m.type==='way'&&m.geometry)fs.push({type:'Feature',properties:{name:g.name||''},geometry:{type:'LineString',coordinates:m.geometry.map(p=>[p.lon,p.lat])}})})});
+  map.addSource('bord',{type:'geojson',data:{type:'FeatureCollection',features:fs}});
+  map.addLayer({id:'bord-l',type:'line',source:'bord',layout:{'line-join':'round'},paint:{'line-color':'#e11d2e','line-width':2.2,'line-dasharray':[4,2]}});
+  map.addLayer({id:'bord-t',type:'symbol',source:'bord',layout:{'symbol-placement':'line','text-field':['get','name'],'text-font':['Noto Sans Regular'],'text-size':11},paint:{'text-color':'#b3121f','text-halo-color':'#fff','text-halo-width':1.5}});
+  if(styleReady&&ti===2)paintDark(true);bi.textContent=ns.length?'Borders here (smallest first): '+ns.sort((a,b)=>b.l-a.l).map(x=>x.n+' [level '+x.l+']').join(' › ')+'. Toggle again after moving the map.':'No administrative borders found here.';
+ }catch(e){bi.textContent='Could not load borders. Try again in a moment.'}
+}
+$('tNames').onclick=e=>{namesOn=!namesOn;e.target.classList.toggle('on',namesOn);if(!namesOn&&map.getSource('names'))map.getSource('names').setData(EMPTY);loadNames()};
+$('tLang').onclick=e=>{lang=lang==='en'?'local':'en';e.target.textContent=lang==='en'?'Names: English':'Names: Local';applyStyle();loadNames()};
+$('tBord').onclick=e=>{bordOn=!bordOn;e.target.classList.toggle('on',bordOn);bord()};
+
+// ---------- Live tracking, navigation, offline ----------
+const say=t=>{if(voiceOn&&window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t))}};
+const circ=(lat,lon,r)=>{const pts=[];for(let i=0;i<=48;i++){const a=i/48*2*Math.PI;pts.push([lon+r*Math.sin(a)/(111320*Math.cos(lat*Math.PI/180)),lat+r*Math.cos(a)/110540])}return{type:'Polygon',coordinates:[pts]}};
+const stepText=s=>{const m=s.maneuver,t=m.type,d=m.modifier||'',on=s.name?' onto '+s.name:'';
+ if(t==='depart')return 'Start'+(s.name?' on '+s.name:'');
+ if(t==='arrive')return 'You have arrived';
+ if(/roundabout|rotary/.test(t))return 'At the roundabout, take exit '+(m.exit||'')+on;
+ if(d==='uturn')return 'Make a U-turn'+on;
+ if(t==='fork')return 'Keep '+d+on;
+ if(t==='merge')return 'Merge '+d+on;
+ return (!d||d==='straight'?'Continue straight':'Turn '+d)+on};
+const stepsHtml=()=>'<div class="row"><button class="btn" id="st">'+(navOn?'Stop navigation':'Start navigation')+'</button></div><ol class="steps">'+nav.steps.map(s=>`<li>${esc(stepText(s))}<small> · ${fmt(s.distance)}</small></li>`).join('')+'</ol>';
+map.on('load',()=>{
+ map.addSource('acc',{type:'geojson',data:EMPTY});
+ map.addLayer({id:'acc',type:'fill',source:'acc',paint:{'fill-color':'#e11d2e','fill-opacity':.12}});
+ map.addSource('trail',{type:'geojson',data:EMPTY});
+ map.addLayer({id:'trail',type:'line',source:'trail',paint:{'line-color':'#000','line-width':4,'line-opacity':.7}});
+});
+map.on('dragstart',()=>{tr.follow=false});
+map.on('moveend',()=>{try{localStorage.setItem('aesthe_view',JSON.stringify({center:map.getCenter().toArray(),zoom:map.getZoom()}))}catch(e){}});
+function putMe(){
+ if(meMarker)meMarker.setLngLat([me.lng,me.lat]);
+ else{const el=document.createElement('div');el.className='me';meMarker=new maplibregl.Marker({element:el}).setLngLat([me.lng,me.lat]).addTo(map)}
+}
+function offRoute(p){let m=1e9;for(const c of nav.coords){const d=hav(p,{lat:c[1],lon:c[0]});if(d<m)m=d}return m}
+function navTick(p){
+ const st=nav.steps[nav.i+1];if(!st)return;
+ const [lo,la]=st.maneuver.location,d=hav(p,{lat:la,lon:lo}),last=st.maneuver.type==='arrive';
+ if(d<(last?30:25)){
+  if(last){navOn=false;$('nb').textContent='You have arrived ✓';say('You have arrived');setTimeout(()=>{$('nb').hidden=true},6000);render();return}
+  nav.i++;return navTick(p);
+ }
+ $('nb').textContent=fmt(d)+' · '+stepText(st);
+ if(d<150&&nav.said!==nav.i){nav.said=nav.i;say('In '+Math.round(d/10)*10+' metres, '+stepText(st))}
+ if(Date.now()-nav.rt>20000&&offRoute(p)>80){nav.rt=Date.now();$('nb').textContent='Rerouting…';route(nav.p,true)}
+}
+function onFix(pos){
+ const c=pos.coords,t=pos.timestamp,acc=c.accuracy||50,raw={lat:c.latitude,lon:c.longitude};
+ if(tr.k&&acc>100)return;                       // ignore very poor fixes
+ if(!tr.k)tr.k={lat:raw.lat,lon:raw.lon,v:acc*acc,t};
+ else{                                          // smooth with a small Kalman filter
+  const k=tr.k,dt=Math.max((t-k.t)/1000,0);
+  if(dt>0&&hav(k,raw)/dt>70&&acc>25)return;     // reject GPS jumps
+  k.v+=dt*9;const g=k.v/(k.v+acc*acc);
+  k.lat+=g*(raw.lat-k.lat);k.lon+=g*(raw.lon-k.lon);k.v*=1-g;k.t=t;
+ }
+ const p={lat:tr.k.lat,lon:tr.k.lon};
+ me={lat:p.lat,lng:p.lon};putMe();
+ const hd=c.heading!=null&&!isNaN(c.heading);
+ meMarker.getElement().classList.toggle('hd',hd);if(hd)meMarker.setRotation(c.heading);
+ if(!tr.last){tr.last=p;tr.path.push([p.lon,p.lat])}
+ else{const d=hav(tr.last,p);if(d>Math.max(4,acc/3)){tr.dist+=d;tr.last=p;tr.path.push([p.lon,p.lat])}}
+ const a=map.getSource('acc'),tl=map.getSource('trail');
+ if(a)a.setData({type:'Feature',geometry:circ(p.lat,p.lon,acc)});
+ if(tl&&tr.path.length>1)tl.setData({type:'Feature',geometry:{type:'LineString',coordinates:tr.path}});
+ $('ts').textContent='● Live · ±'+Math.round(acc)+' m'+(acc>50?' (improving…)':'')+' · '+(c.speed!=null?Math.round(c.speed*3.6)+' km/h · ':'')+fmt(tr.dist);
+ if(tr.follow){
+  const o={center:[p.lon,p.lat],duration:600};
+  if(navOn){o.zoom=Math.max(map.getZoom(),16);if(hd&&(c.speed||0)>1){o.bearing=c.heading;o.pitch=50}}
+  else if(!tr.centered&&acc<=100){o.zoom=Math.max(map.getZoom(),16);tr.centered=1}
+  map.easeTo(o);
+ }
+ if(navOn&&nav)navTick(p);
+}
+function startTrack(){
+ if(!navigator.geolocation){alert('Location is not supported on this device.');return}
+ if(tr.on)return;
+ Object.assign(tr,{on:true,follow:true,k:null,last:null,dist:0,path:[],centered:0});
+ $('trk').classList.add('on');$('ts').hidden=false;$('ts').textContent='Getting a precise location…';
+ tr.id=navigator.geolocation.watchPosition(onFix,e=>{$('ts').hidden=false;$('ts').textContent=!window.isSecureContext?'Tracking needs https:// (host aesthe, do not open it as a file)':e.code===1?'Location is blocked. Allow it in browser settings':'Waiting for GPS… try outdoors'},{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+ try{navigator.wakeLock&&navigator.wakeLock.request('screen').then(w=>{tr.wl=w}).catch(()=>{})}catch(e){}
+}
+function stopTrack(){
+ navigator.geolocation.clearWatch(tr.id);tr.on=false;$('trk').classList.remove('on');$('ts').hidden=true;
+ if(tr.wl){tr.wl.release();tr.wl=null}
+ if(navOn)stopNav();
+}
+function startNav(){
+ if(!nav)return;
+ sheet(false);navOn=true;nav.i=0;nav.said=-1;nav.rt=Date.now();
+ $('nb').hidden=false;$('nb').textContent='Starting…';
+ if(!tr.on)startTrack();
+ say('Navigation started');render();
+}
+function stopNav(){navOn=false;$('nb').hidden=true;render()}
+document.addEventListener('visibilitychange',()=>{if(tr.on&&document.visibilityState==='visible'&&navigator.wakeLock)navigator.wakeLock.request('screen').then(w=>{tr.wl=w}).catch(()=>{})});
+
+// Save the area around the map so it still works with weak or no internet
+async function saveOff(){
+ const bi=$('bi');bi.hidden=false;
+ if(!(navigator.serviceWorker&&navigator.serviceWorker.controller)){bi.textContent='Offline saving needs aesthe to be opened from https:// or localhost (not a plain file), then reloaded once.';return}
+ bi.textContent='Preparing offline area…';
+ try{
+  const st=await fetch('https://tiles.openfreemap.org/styles/liberty').then(r=>r.json());
+  const src=Object.values(st.sources).find(x=>x.type==='vector'),tpl=(await fetch(src.url).then(r=>r.json())).tiles[0];
+  const b=map.getBounds(),w=b.getEast()-b.getWest(),h=b.getNorth()-b.getSouth();
+  const W=b.getWest()-w/2,E=b.getEast()+w/2,S=Math.max(-84,b.getSouth()-h/2),N=Math.min(84,b.getNorth()+h/2);
+  const tx=(lo,z)=>Math.floor((lo+180)/360*2**z),ty=(la,z)=>Math.floor((1-Math.log(Math.tan(la*Math.PI/180)+1/Math.cos(la*Math.PI/180))/Math.PI)/2*2**z);
+  let urls=[];
+  for(let z=Math.max(5,Math.min(14,Math.round(map.getZoom()))-3);z<=14;z++)
+   for(let x=tx(W,z);x<=tx(E,z);x++)for(let y=ty(N,z);y<=ty(S,z);y++)urls.push(tpl.replace('{z}',z).replace('{x}',x).replace('{y}',y));
+  urls=urls.slice(0,900);
+  const fonts=new Set();(st.layers||[]).forEach(l=>{const f=l.layout&&l.layout['text-font'];if(Array.isArray(f)&&typeof f[0]==='string'&&f[0]!=='literal')fonts.add(f.join(','))});
+  fonts.forEach(f=>['0-255','256-511'].forEach(r=>urls.push(st.glyphs.replace('{fontstack}',encodeURIComponent(f)).replace('{range}',r))));
+  if(st.sprite)['.json','.png','@2x.json','@2x.png'].forEach(x=>urls.push(st.sprite+x));
+  let n=0;
+  for(let i=0;i<urls.length;i+=6){
+   await Promise.all(urls.slice(i,i+6).map(u=>fetch(u).catch(()=>{})));
+   n=Math.min(i+6,urls.length);bi.textContent='Saving offline area… '+n+'/'+urls.length;
+  }
+  bi.textContent='Saved '+urls.length+' map files. This area now opens without internet.';
+ }catch(e){bi.textContent='Could not save the area. Check your connection and try again.'}
+}
+const netUI=()=>{const o=$('net');o.hidden=navigator.onLine;o.textContent='Offline · using saved data'};
+addEventListener('online',netUI);addEventListener('offline',netUI);netUI();
+const cn=navigator.connection;if(cn&&(cn.saveData||/2g|3g/.test(cn.effectiveType||''))){namesOn=false;$('tNames').classList.remove('on')}
+$('tVoice').onclick=e=>{voiceOn=!voiceOn;e.target.classList.toggle('on',voiceOn)};
+$('tOff').onclick=saveOff;
+$('trk').onclick=()=>tr.on?stopTrack():startTrack();
+if('serviceWorker'in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+// Mobile bottom sheet: tap or swipe the handle to give the map more room
+const sideEl=document.querySelector('.side'),isMob=()=>matchMedia('(max-width:700px)').matches;
+function sheet(open){if(isMob())sideEl.classList.toggle('peek',!open)}
+let gy=0;
+$('grab').addEventListener('pointerdown',e=>{gy=e.clientY});
+$('grab').addEventListener('pointerup',e=>{const d=e.clientY-gy;sideEl.classList.toggle('peek',d>35?true:d<-35?false:!sideEl.classList.contains('peek'))});
+new ResizeObserver(()=>document.documentElement.style.setProperty('--sh',sideEl.offsetHeight+'px')).observe(sideEl);
+if(isMob())sheet(false);
+if(window.visualViewport){const vv=visualViewport,fix=()=>{const kb=Math.max(0,innerHeight-vv.height-vv.offsetTop);sideEl.style.transform=isMob()&&kb>80?'translateY('+(-kb)+'px)':''};vv.addEventListener('resize',fix);vv.addEventListener('scroll',fix)}
+if(!window.isSecureContext&&!items.length)msg='Open aesthe from an https:// address (not a downloaded file) so location, live tracking and offline maps work.';
+if(!window.isSecureContext)msg='GPS and offline mode need an https link. Host this file (for example on Netlify) to use them on your phone. '+msg;
+// Dark map: recolour the map layers themselves so roads and buildings stay clearly visible
+const DK={};let styleReady=false;
+function paintDark(on){
+ if(!map.getStyle())return;
+ const set=(id,prop,val)=>{try{const k=id+'|'+prop;if(!(k in DK))DK[k]=map.getPaintProperty(id,prop);map.setPaintProperty(id,prop,on?val:DK[k])}catch(e){}};
+ map.getStyle().layers.forEach(l=>{
+  const id=l.id,s=l['source-layer']||'',t=l.type;
+  if(t==='background')set(id,'background-color','#0b0b0b');
+  else if(t==='fill')set(id,'fill-color',s==='water'?'#0b2a3d':s==='building'?'#2b2b2b':/park|wood|grass|forest|landcover/.test(id+s)?'#102010':'#151515');
+  else if(t==='fill-extrusion')set(id,'fill-extrusion-color','#333');
+  else if(t==='line'){
+   let c=null;
+   if(id==='mline'||id==='trail')c='#ffffff';
+   else if(s==='transportation'||/road|highway|bridge|tunnel|motorway|path|rail|ferry/.test(id))
+    c=/casing/.test(id)?'#050505':/motorway/.test(id)?'#f0b45a':/trunk|primary/.test(id)?'#ececec':/secondary|tertiary/.test(id)?'#c8c8c8':/minor|service|street|residential/.test(id)?'#a0a0a0':/path|pedestrian|track|foot|cycle/.test(id)?'#707070':/rail|transit/.test(id)?'#5a5a5a':'#909090';
+   else if(s==='waterway')c='#17506f';
+   else if(s==='boundary'||/boundary/.test(id))c='#808080';
+   if(c)set(id,'line-color',c);
+  }
+  else if(t==='symbol'&&l.layout&&l.layout['text-field']){set(id,'text-color',/^(names|bord-t)$/.test(id)?'#ff9aa2':'#e8e8e8');set(id,'text-halo-color','#0b0b0b')}
+ });
+}
+map.on('load',()=>{styleReady=true;paintDark(ti===2)});
+// Map colour mode: Default, Grey, Dark (black) and Warm (less blue light). Remembered between visits.
+const THEMES=[['','Default'],['m-grey','Grey'],['m-dark','Dark'],['m-warm','Warm']];
+let ti=0;try{ti=+localStorage.getItem('aesthe_theme')||0}catch(e){}
+function applyTheme(){
+ document.body.classList.remove('m-grey','m-dark','m-warm','dk');
+ const t=THEMES[ti];if(t[0])document.body.classList.add(t[0]);if(ti===2)document.body.classList.add('dk');
+ $('tTheme').textContent='Map: '+t[1];
+ try{localStorage.setItem('aesthe_theme',ti)}catch(e){}
+ if(styleReady)paintDark(ti===2);
+}
+$('tTheme').onclick=()=>{ti=(ti+1)%THEMES.length;applyTheme()};
+applyTheme();
+
+$('loc').onclick=()=>{if(tr.on){tr.follow=true;if(me)map.flyTo({center:[me.lng,me.lat],zoom:Math.max(map.getZoom(),16)})}else locate(true).catch(()=>{})};
+$('zi').onclick=()=>map.zoomIn();
+$('zo').onclick=()=>map.zoomOut();
+$('d3').onclick=()=>{const on=map.getPitch()<10;map.easeTo({pitch:on?60:0,duration:600});$('d3').classList.toggle('on',on)};
+render();
+locate(true).catch(()=>{});
+</script>
+</body>
+</html>
